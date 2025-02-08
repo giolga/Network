@@ -202,125 +202,57 @@ void type_1_subnetting() {
     free(binary_to_decimal_subnet);
 }
 
-unsigned char get_subnet(char input_str[]) {
-    char *slash_pos = strchr(input_str, '/'); // Find '/' in the string
-
-    if (slash_pos == NULL) {
-        return 0;
-    }
-
-    return (unsigned char)atoi(slash_pos + 1); // Convert the number after '/' to an integer
-}
-
 void type_2_subnetting() {
-    printf("Insert IPv4 Address with it's mask (/24): ");
-    char ipv4[32];
-    fgets(ipv4, sizeof(ipv4), stdin);
-    ipv4[strcspn(ipv4, "\n")] = '\0';
-
-    if (!is_valid_ip(ipv4)) {
-        printf("Invalid IP address.\n");
-        return ;
-    }
-
-    unsigned char slash = get_subnet(ipv4);
-    // scanf("%hhu", slash);
-
-    unsigned char first_octet, second_octet, third_octet, fourth_octet;
-    int k = 0;
+    char input[32];  
+    unsigned char first, second, third, fourth, slash;
     
-    first_octet = get_octets(&k, ipv4);
-
-    k++;
-    second_octet = get_octets(&k, ipv4);
-
-    k++;
-    third_octet = get_octets(&k, ipv4);
-
-    k++;
-    fourth_octet = get_octets(&k, ipv4);
-
-    printf("All octets: %hhu.%hhu.%hhu.%hhu / %hhu\n", first_octet, second_octet, third_octet, fourth_octet, slash);
-
-    unsigned char subnet_mask_cnt = 0, bit;
-    char network_class;  
-
-    if(slash >= 8 && slash < 16) {
-        network_class = 'A';
-        subnet_mask_cnt = 1;
-        bit = 8;
+    printf("Insert IPv4 Address with its mask without any white space (e.g., 192.168.1.1/24): ");
+    fgets(input, sizeof(input), stdin);
+    
+    if (sscanf(input, "%hhu.%hhu.%hhu.%hhu/%hhu", &first, &second, &third, &fourth, &slash) != 5) {
+        printf("Invalid input format!\n");
+        return;
     }
-    else if(slash >= 16 && slash < 24) {
-        network_class = 'B';
-        subnet_mask_cnt = 2;
-        bit = 16;
-    } 
-    else {
-        network_class = 'C';
-        subnet_mask_cnt = 3;
+
+    printf("\nAll octets: %hhu.%hhu.%hhu.%hhu\n", first, second, third, fourth);
+    printf("After Slash: %hhu\n", slash);
+
+    // Determine IP Class & Subnet Mask Prefix
+    unsigned int bit, cntOf255;
+    if (slash >= 8 && slash < 16) {
+         bit = 8; 
+         cntOf255 = 1;
+    }
+    else if (slash >= 16 && slash < 24) { 
+        bit = 16; 
+        cntOf255 = 2; 
+    }
+    else { 
         bit = 24;
+        cntOf255 = 3;
     }
 
-    unsigned char period = bit + 8 - slash;
-    unsigned char for_subnet = abs(slash - bit);
+    unsigned int period = bit + 8 - slash;
+    unsigned int forSubnett = slash - bit;
 
-    char* find_subnet_mask_binary = get_binary_string(for_subnet);
-    printf("Subnet Mask in binary: %s\n", find_subnet_mask_binary);
+    // printf("n times one: %u\n", forSubnett);
+    // printf("Period: %u\n", period);
 
-    unsigned int network_address = 0, tmp = 0;
+    // Subnet Mask Calculation
+    unsigned int subnet_mask = (0xFFFFFFFF << (32 - slash)) & 0xFFFFFFFF;
+    unsigned char sm1 = (subnet_mask >> 24) & 0xFF;
+    unsigned char sm2 = (subnet_mask >> 16) & 0xFF;
+    unsigned char sm3 = (subnet_mask >> 8) & 0xFF;
+    unsigned char sm4 = subnet_mask & 0xFF;
 
-    char netword_address_str[16] = "";
-    char broadcast_address[16] = "";
-
-    if(network_class == 'A') {
-        network_address = (1 << period);
-        tmp = network_address;
-        network_address = (second_octet / network_address) * network_address;
-        sprintf(netword_address_str, "%hhu.%d.0.0", first_octet, network_address);
-        sprintf(broadcast_address, "%hhu.%d.255.255", first_octet, (network_address + tmp - 1));
-    }
-    else if(network_class == 'B') {
-        network_address = (1 << period);
-        tmp = network_address;
-        network_address = (third_octet / network_address) * network_address;
-        sprintf(netword_address_str, "%hhu.%hhu.%d.0", first_octet, second_octet, network_address);
-        sprintf(broadcast_address, "%hhu.%hhu.%d.255", first_octet, second_octet, (network_address + tmp - 1));
-    }
-    else {
-        network_address = (1 << period);
-        tmp = network_address;
-        network_address = (fourth_octet / network_address) * network_address;
-        sprintf(netword_address_str, "%hhu.%hhu.%hhu.%d", first_octet, second_octet, third_octet, network_address);
-        sprintf(broadcast_address, "%hhu.%hhu.%hhu.%d", first_octet, second_octet, third_octet, (network_address + tmp - 1));
-    }
-
-    printf("Network Address: %s\n", netword_address_str);
-    printf("Broadcast Address: %s\n", broadcast_address);
-
-    k = 4;
-    k -= subnet_mask_cnt;
-    char subnet_mask[16] = "";
-
-    while(subnet_mask_cnt > 0) {
-        strcat(subnet_mask, "255.");
-        subnet_mask_cnt--;
-    }
-
-    char* part_of_subnet_mask = bin_to_decimal(find_subnet_mask_binary); 
-    char part_str[4];
     
-    printf("Part of SM: %s\n", part_of_subnet_mask);
-    sprintf(part_str, "%s", part_of_subnet_mask); 
-    strcat(subnet_mask, part_str);
-    // strcat(subnet_mask, ".");
-
-    k--;
-    while(k > 0) {
-        strcat(subnet_mask, ".0");
-        k--;
-    }
-
-    printf("Subnet Mask: %s\n", subnet_mask);
+    unsigned int block_size = 1 << (32 - slash);
+    unsigned int network_ip = (fourth / block_size) * block_size;
+    unsigned int broadcast_ip = network_ip + block_size - 1;
+    
+    printf("Network Address: %hhu.%hhu.%hhu.%hhu\n", first, second, third, network_ip);
+    printf("Broadcast Address: %hhu.%hhu.%hhu.%hhu\n", first, second, third, broadcast_ip);
+    printf("Subnet mask: %hhu.%hhu.%hhu.%hhu\n", sm1, sm2, sm3, sm4);
 }
 
 int main(int argc, char *argv[]) {
