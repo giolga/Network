@@ -1,0 +1,32 @@
+1. fgets():
+Purpose: Reads a line of text from the input (usually stdin) and stores it in a buffer.
+Usage: fgets(input, sizeof(input), stdin);
+Explanation: It allows reading input with spaces and includes the newline character at the end, which you can remove if needed.
+2. strcspn():
+Purpose: Finds the length of the initial segment of a string that does not contain any characters from a specified set.
+Usage: strcspn(input, "\n");
+Explanation: In this case, it's used to find the newline character \n added by fgets() and remove it by replacing it with a null terminator (\0).
+3. strchr():
+Purpose: Locates the first occurrence of a character in a string.
+Usage: strchr(input, '/');
+Explanation: Finds the position of the / character (in the IP address and mask string) so we can manipulate the string around it (e.g., removing spaces).
+4. sscanf():
+Purpose: Reads formatted input from a string.
+Usage: sscanf(input, "%hhu.%hhu.%hhu.%hhu/%hhu", &first, &second, &third, &fourth, &slash);
+Explanation: It’s used to extract values from the input string (IP address and subnet mask). The format specifiers (%hhu) are used to store unsigned char values.
+5. sprintf():
+Purpose: Writes formatted output to a string.
+Usage: sprintf(destination, "%d.%d.%d.%d", first, second, third, fourth);
+Explanation: It formats the output (in this case, an IP address) and stores it in a string.
+6. strcat():
+Purpose: Concatenates two null-terminated strings.
+Usage: strcat(destination, source);
+Explanation: It appends the source string to the end of the destination string. Be careful with buffer size to avoid overflow.
+7. strlen():
+Purpose: Calculates the length of a null-terminated string.
+Usage: strlen(input);
+Explanation: It returns the number of characters in the string (excluding the null terminator).
+8. memset():
+Purpose: Fills a block of memory with a specified value.
+Usage: memset(input, 0, sizeof(input));
+Explanation: It’s used to initialize or reset a memory block (e.g., clearing out the buffer).
