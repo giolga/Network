@@ -25,6 +25,24 @@ char* bin_to_decimal(char binary_subnet_mask[]) {
     return decimal_subnet_mask_value;  
 }
 
+char* n_times_one(int n) {
+    if (n < 0 || n > 8) return NULL;
+
+    char* ans = (char*)malloc(9);  // Allocate 9 bytes (8 characters + null terminator)
+    if (!ans) return NULL;  // Check for allocation failure
+
+    for (int i = 0; i < n; i++) {
+        ans[i] = '1';
+    }
+    for (int i = 0; i < (8 - n); i++) {
+        ans[n + i] = '0';
+    }
+    
+    ans[8] = '\0';
+    return ans; 
+}
+
+
 int is_valid_ip(char ip[]) {
     int first_octet, second_octet, third_octet, fourth_octet;
 
@@ -205,6 +223,7 @@ void type_1_subnetting() {
 void type_2_subnetting() {
     char input[32];  
     unsigned char first, second, third, fourth, slash;
+    char find_class;
     
     printf("Insert IPv4 Address with its mask without any white space (e.g., 192.168.1.1/24): ");
     fgets(input, sizeof(input), stdin);
@@ -222,37 +241,97 @@ void type_2_subnetting() {
     if (slash >= 8 && slash < 16) {
          bit = 8; 
          cntOf255 = 1;
+         find_class = 'A';
     }
     else if (slash >= 16 && slash < 24) { 
         bit = 16; 
         cntOf255 = 2; 
+        find_class = 'B';
     }
     else { 
         bit = 24;
         cntOf255 = 3;
+        find_class = 'C';
     }
 
     unsigned int period = bit + 8 - slash;
-    unsigned int forSubnett = slash - bit;
+    unsigned int forSubnett = abs(slash - bit);
 
-    // printf("n times one: %u\n", forSubnett);
-    // printf("Period: %u\n", period);
+    printf("n Times one: %d\n", forSubnett);
+    printf("Define class: %c\n", find_class);
+    printf("period: %d\n", period);
 
-    // Subnet Mask Calculation
-    unsigned int subnet_mask = (0xFFFFFFFF << (32 - slash)) & 0xFFFFFFFF;
-    unsigned char sm1 = (subnet_mask >> 24) & 0xFF;
-    unsigned char sm2 = (subnet_mask >> 16) & 0xFF;
-    unsigned char sm3 = (subnet_mask >> 8) & 0xFF;
-    unsigned char sm4 = subnet_mask & 0xFF;
+    char find_SM[32];
+    char* result = n_times_one(forSubnett);  // Get dynamically allocated string
 
+    if (result) {
+        strcpy(find_SM, result);  
+        free(result);
+    }
+
+    printf("Subnet: %s\n", find_SM);
+
+    int network_address, tmp;
+    char NA[32], BA[32];
+
+    if(find_class == 'A') {
+        network_address = pow(2, period);
+        tmp = network_address;
+        network_address = (second / network_address) * network_address;
+        sprintf(NA, "%d.%d.0.0", first, network_address);
+        sprintf(BA, "%d.%d.255.255", first, (network_address + tmp - 1));
+    }
+    else if(find_class == 'B') {
+        network_address = pow(2, period);
+        tmp = network_address;
+        network_address = (third / network_address) * network_address;
+        sprintf(NA, "%d.%d.%d.0", first, second, network_address);
+        sprintf(BA, "%d.%d.%d.255", first, second, (network_address + tmp - 1));
+    }
+    else {
+        network_address = pow(2, period);
+        tmp = network_address;
+        network_address = (fourth / network_address) * network_address;
+        sprintf(NA, "%d.%d.%d.%d", first, second, third, network_address);
+        sprintf(BA, "%d.%d.%d.%d", first, second, third, (network_address + tmp - 1));
+    }
+
+    printf("Network Address: %s\n", NA);
+    printf("Broadcast Address: %s\n", BA);
+
+    int k = 4;
+    k -= cntOf255;
+    char subnet_mask[32] = "";
+
+    char* part_of_SM = bin_to_decimal(find_SM);
     
-    unsigned int block_size = 1 << (32 - slash);
-    unsigned int network_ip = (fourth / block_size) * block_size;
-    unsigned int broadcast_ip = network_ip + block_size - 1;
+    // Add parts with 255
+    while (cntOf255 > 0) {
+        strcat(subnet_mask, "255.");
+        cntOf255--;
+    }
     
-    printf("Network Address: %hhu.%hhu.%hhu.%hhu\n", first, second, third, network_ip);
-    printf("Broadcast Address: %hhu.%hhu.%hhu.%hhu\n", first, second, third, broadcast_ip);
-    printf("Subnet mask: %hhu.%hhu.%hhu.%hhu\n", sm1, sm2, sm3, sm4);
+    // Add the calculated part
+    if (part_of_SM != NULL) {
+        char temp[10];
+        sprintf(temp, "%s.", part_of_SM);
+        strcat(subnet_mask, temp);
+        free(part_of_SM);  // Free allocated memory
+    }
+    
+    // Add remaining parts with 0
+    while (k > 0) {
+        strcat(subnet_mask, "0.");
+        k--;
+    }
+    
+    // Remove the trailing dot
+    int len = strlen(subnet_mask);
+    if (len >= 2) {
+        subnet_mask[len - 3] = '\0';
+    }
+    
+    printf("Subnet Mask: %s\n", subnet_mask);
 }
 
 int main(int argc, char *argv[]) {
