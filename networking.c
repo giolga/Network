@@ -334,18 +334,77 @@ void type_2_subnetting() {
     printf("Subnet Mask: %s\n", subnet_mask);
 }
 
+void eui64() {
+    printf("EUI 64 in progress");
+}
+
+void host() {
+    printf("Hosts in progress");
+}
+
+void banner() {
+    printf("\033[0;34m"  // bright blue
+"                _                      __                             \n"
+"   / | / /__  / /__      ______  _____/ /__(_)___  ____ _\n"
+"  /  |/ / _ \\/ __/ | /| / / __ \\/ ___/ //_/ / __ \\/ __ `/\n"
+" / /|  /  __/ /_ | |/ |/ / /_/ / /  / ,< / / / / / /_/ / \n"
+"/_/ |_/\\___/\\__/ |__/|__/\\____/_/  /_/|_/_/_/ /_/\\__, /  \n"
+ "                                                /____/ \n"
+           "\033[0m\n\n");
+
+    printf("\033[1;33mNetworking\033[0m CISCO Tool "
+           "\033[1;31mintelkumi\033[0m v1.0\n\n");
+}
+
+void header() {
+    printf("\33[1;32m"
+        "================== Cisco Tool ==================\n"
+        "          Powered by El Kumi Cipher Labs (v1.0)\n"
+        "================================================\n"
+    "\033[0m");
+}
+
+void help() {
+    printf("\033[1;33mUsage:\033[0m\n"
+        "   ./networking -subt1 - Subnetting Type 1\n"
+        "   ./networking -subt2 -Subnetting Type 2\n"
+        "   ./networking -eui64 <00-11-ff-ca-fe-00> - specify MAC in the following format \n"
+        "   ./networking -host - Count N# of hosts in the network"
+    );
+}
+
 int main(int argc, char *argv[]) {
+    if(argc < 2) {
+        help();
+
+        return 1;
+    }
+
+    banner();
+    header();
+
     char task[50];
 
-    printf("Operation: ");
-    fgets(task, sizeof(task), stdin);
-    task[strcspn(task, "\n")] = '\0';
+    // printf("Operation: ");
+    // fgets(task, sizeof(task), stdin);
+    // task[strcspn(task, "\n")] = '\0';
 
-    if (strcmp(task, "subnet-type1") == 0) {
+    if (strcmp(argv[1], "-subt1") == 0) {
         type_1_subnetting();
     } 
-    else if(strcmp(task, "subnet-type2") == 0){
+    else if (strcmp(argv[1], "-subt2") == 0) {
         type_2_subnetting();
+    } 
+    else if (strcmp(argv[1], "-eui64") == 0) {
+        eui64();
+    } 
+    else if (strcmp(argv[1], "-host") == 0) {
+        host();
+    } 
+    else {
+        printf("Unknown operation: %s\n", argv[1]);
+        help(); // Optional: show help on invalid command
+        return 1;
     }
 
     return 0;
